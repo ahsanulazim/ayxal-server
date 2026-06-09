@@ -18,12 +18,20 @@ export const cjGetProducts = async (req, res, next) => {
 export const cjSearchProducts = async (req, res, next) => {
   try {
     const { keyword, pageNum = 1, pageSize = 20 } = req.query;
-    const response = await cjApi.post("/product/listV2", { keyword, pageNum, pageSize });
+    const response = await cjApi.post("/product/listV2", {
+      keyword,
+      pageNum,
+      pageSize,
+    });
     if (response.data.code !== 200) throw new Error(response.data.message);
 
     res.json({ success: true, products: response.data.data });
   } catch (error) {
-    next(error);
+    console.error("CJ API Error:", error.response?.data || error.message);
+    res.status(error.response?.status || 500).json({
+      success: false,
+      message: error.response?.data?.message || "Internal Server Error",
+    });
   }
 };
 
@@ -54,7 +62,7 @@ export const addProductToStore = async (req, res, next) => {
     await productCollection.updateOne(
       { productId: product.productId },
       { $set: product },
-      { upsert: true }
+      { upsert: true },
     );
 
     // Sync with CJ "Add to My Product"

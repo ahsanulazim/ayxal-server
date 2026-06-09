@@ -13,6 +13,8 @@ const cjApi = axios.create({
 // Add CJ Access Token dynamically
 cjApi.interceptors.request.use((config) => {
   const token = process.env.CJ_API_TOKEN;
+  console.log(token);
+
   if (token) {
     config.headers["CJ-Access-Token"] = token;
   }

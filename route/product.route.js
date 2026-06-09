@@ -1,7 +1,13 @@
-import express from "express"
-import { addProductToStore, cjGetProducts, cjSearchProducts, deleteProduct, getCjProductDetails } from "../controller.js/product.controller.js";
+import express from "express";
+import {
+  addProductToStore,
+  cjGetProducts,
+  cjSearchProducts,
+  deleteProduct,
+  getCjProductDetails,
+} from "../controller/product.controller.js";
 
-const router = express.Router()
+const router = express.Router();
 
 //routes
 router.get("/cj/products", cjGetProducts);
