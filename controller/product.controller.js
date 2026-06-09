@@ -17,13 +17,17 @@ export const cjGetProducts = async (req, res, next) => {
 //cj product search
 export const cjSearchProducts = async (req, res, next) => {
   try {
-    const { keyword, pageNum = 1, pageSize = 20 } = req.query;
-    const response = await cjApi.post("/product/listV2", {
-      keyword,
-      pageNum,
-      pageSize,
+    const { keyWord, page = 1, size = 20 } = req.query;
+    const response = await cjApi.get("/product/listV2", {
+      params: {
+        keyWord,
+        page,
+        size,
+      },
     });
     if (response.data.code !== 200) throw new Error(response.data.message);
+
+    console.log("CJ Search Response:", response.data);
 
     res.json({ success: true, products: response.data.data });
   } catch (error) {
@@ -53,11 +57,16 @@ export const getCjProductDetails = async (req, res, next) => {
 export const addProductToStore = async (req, res, next) => {
   try {
     const { productId } = req.body;
+
+    console.log(productId);
+
     const response = await cjApi.get(`/product/query?pid=${productId}`);
 
     if (response.data.code !== 200) throw new Error(response.data.message);
 
     const product = response.data.data;
+
+    console.log(product);
 
     await productCollection.updateOne(
       { productId: product.productId },
@@ -66,7 +75,9 @@ export const addProductToStore = async (req, res, next) => {
     );
 
     // Sync with CJ "Add to My Product"
-    const cjResponse = await cjApi.post("/myCJProduct/add", { productId });
+    const cjResponse = await cjApi.post("/product/addToMyProduct", {
+      productId,
+    });
     if (cjResponse.data.code !== 200) throw new Error(cjResponse.data.message);
 
     res.json({ success: true, product });

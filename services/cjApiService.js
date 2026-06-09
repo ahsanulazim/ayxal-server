@@ -1,5 +1,10 @@
 import axios from "axios";
 import dotenv from "dotenv";
+import {
+  getCachedTokens,
+  getCjAccessToken,
+  refreshAccessToken,
+} from "./cjAuthService.js";
 
 dotenv.config();
 
@@ -10,15 +15,28 @@ const cjApi = axios.create({
   },
 });
 
-// Add CJ Access Token dynamically
-cjApi.interceptors.request.use((config) => {
-  const token = process.env.CJ_API_TOKEN;
-  console.log(token);
+cjApi.interceptors.request.use(async (config) => {
+  let { accessToken } = getCachedTokens();
 
-  if (token) {
-    config.headers["CJ-Access-Token"] = token;
+  if (!accessToken) {
+    const tokens = await getCjAccessToken();
+    accessToken = tokens.accessToken;
   }
+
+  config.headers["CJ-Access-Token"] = accessToken;
   return config;
 });
+
+cjApi.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    if (error.response?.status === 401) {
+      const tokens = await refreshAccessToken();
+      error.config.headers["CJ-Access-Token"] = tokens.accessToken;
+      return cjApi.request(error.config);
+    }
+    return Promise.reject(error);
+  },
+);
 
 export default cjApi;
