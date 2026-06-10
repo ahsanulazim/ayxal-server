@@ -1,4 +1,4 @@
-import { productCollection } from "../collections/collection.js";
+import { storeCollection } from "../collections/collection.js";
 import cjApi from "../services/cjApiService.js";
 
 export const cjGetProducts = async (req, res, next) => {
@@ -17,7 +17,7 @@ export const cjGetProducts = async (req, res, next) => {
 //cj product search
 export const cjSearchProducts = async (req, res, next) => {
   try {
-    const { keyWord, page = 1, size = 20 } = req.query;
+    const { keyWord, page = 1, size = 24 } = req.query;
     const response = await cjApi.get("/product/listV2", {
       params: {
         keyWord,
@@ -68,7 +68,7 @@ export const addProductToStore = async (req, res, next) => {
 
     console.log(product);
 
-    await productCollection.updateOne(
+    await storeCollection.updateOne(
       { productId: product.productId },
       { $set: product },
       { upsert: true },
@@ -91,7 +91,7 @@ export const deleteProduct = async (req, res, next) => {
   try {
     const { productId } = req.params;
 
-    const result = await productCollection.deleteOne({ productId });
+    const result = await storeCollection.deleteOne({ productId });
 
     if (result.deletedCount === 0) throw new Error("Product not found");
 
