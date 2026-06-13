@@ -58,27 +58,21 @@ export const addProductToStore = async (req, res, next) => {
   try {
     const { productId } = req.body;
 
-    console.log(productId);
-
     const response = await cjApi.get(`/product/query?pid=${productId}`);
 
     if (response.data.code !== 200) throw new Error(response.data.message);
 
     const product = response.data.data;
-
-    console.log(product);
-
-    await storeCollection.updateOne(
-      { productId: product.productId },
-      { $set: product },
-      { upsert: true },
-    );
-
     // Sync with CJ "Add to My Product"
     const cjResponse = await cjApi.post("/product/addToMyProduct", {
       productId,
     });
     if (cjResponse.data.code !== 200) throw new Error(cjResponse.data.message);
+
+    await storeCollection.insertOne({
+      ...product,
+      createdAt: new Date(),
+    });
 
     res.json({ success: true, product });
   } catch (error) {
@@ -104,3 +98,24 @@ export const deleteProduct = async (req, res, next) => {
     next(error);
   }
 };
+
+export const getAllStoreProducts = async (req, res) => {
+  try {
+    const pageNum = parseInt(req.query.page) || 1;
+    const limitNum = 10;
+
+    const products = await storeCollection.find()
+      .sort({ createdAt: -1 })
+      .skip((pageNum - 1) * limitNum)
+      .limit(limitNum)
+      .toArray();
+
+    const totalProducts = await storeCollection.countDocuments();
+    const totalPages = Math.ceil(totalProducts / limitNum);
+
+    res.json({ success: true, products, totalProducts, totalPages });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
+}

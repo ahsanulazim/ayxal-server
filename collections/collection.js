@@ -5,3 +5,5 @@ await userCollection.createIndex({ email: 1 }, { unique: true });
 
 export const productCollection = client.db("pretypet").collection("products");
 export const storeCollection = client.db("pretypet").collection("store");
+export const categoryCollection = client.db("pretypet").collection("categories");
+await categoryCollection.createIndex({ slug: 1 }, { unique: true });
